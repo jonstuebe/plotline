@@ -19,6 +19,8 @@ When the game ends, Share posts the result without giving away the book:
 Plotline #12 3/6
 
 📖 🟥⬜🟩⬛⬛⬛
+
+plotline.jonstuebe.com
 ```
 
 🟥 is a wrong guess, ⬜ a skip, 🟩 the correct guess, and ⬛ a clue the player never needed.
