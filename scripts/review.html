@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plotline Review Desk</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<link rel="stylesheet" href="/fonts/libre-baskerville/400.css">
+<link rel="stylesheet" href="/fonts/libre-baskerville/700.css">
+<link rel="stylesheet" href="/fonts/libre-baskerville/400-italic.css">
+<link rel="stylesheet" href="/fonts/special-elite/400.css">
+<style>
+:root {
+  --wall: #e6dac4;
+  --panel: #efe5d1;
+  --ink: #33241a;
+  --muted: #6e5a49;
+  --line: #cdbd9f;
+  --card: #fbf7ec;
+  --card-ink: #2b2420;
+  --card-muted: #6a5a4a;
+  --rule: #bfd3e6;
+  --red-rule: #d9473f;
+  --stamp: #a8322c;
+  --ok: #2f6b3f;
+  --warn-bg: #f6e2b3;
+  --warn-ink: #5c3f0c;
+  --focus: #2f5a8a;
+  --font-serif: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --font-type: 'Special Elite', 'Courier New', Courier, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --wall: #141b17;
+    --panel: #1b241f;
+    --ink: #ece1cc;
+    --muted: #a99a84;
+    --line: #2f3b34;
+    --card: #eae2ce;
+    --focus: #8fb7e6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --wall: #141b17;
+  --panel: #1b241f;
+  --ink: #ece1cc;
+  --muted: #a99a84;
+  --line: #2f3b34;
+  --card: #eae2ce;
+  --focus: #8fb7e6;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--wall); color: var(--ink); font: 15px/1.5 var(--font-serif); min-height: 100vh; }
+button, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+header h1 { margin: 0; font-size: 20px; letter-spacing: 0.01em; }
+header h1 span { font-family: var(--font-type); font-weight: 400; color: var(--muted); font-size: 15px; margin-left: 6px; }
+.tally { font-family: var(--font-type); font-size: 13px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+.tally b { color: var(--ink); font-weight: 400; }
+.controls { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tabs button { border: 0; background: transparent; padding: 6px 12px; font-size: 13px; }
+.tabs button[aria-pressed='true'] { background: var(--ink); color: var(--wall); }
+.toggle { border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+.toggle[aria-pressed='true'] { background: var(--ink); color: var(--wall); }
+
+.layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 70px); }
+aside { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; max-height: calc(100vh - 70px); position: sticky; top: 0; }
+aside ol { list-style: none; margin: 0; padding: 6px; }
+aside li button { width: 100%; text-align: left; display: grid; grid-template-columns: 40px 1fr auto; gap: 2px 8px; align-items: center; border: 0; background: transparent; padding: 8px 10px; border-radius: 8px; }
+aside li button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+aside li button[aria-current='true'] { background: color-mix(in srgb, var(--ink) 13%, transparent); }
+.num { font-family: var(--font-type); color: var(--muted); font-size: 13px; grid-row: span 2; }
+.li-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+.li-date { font-family: var(--font-type); font-size: 12px; color: var(--muted); grid-column: 2; }
+.dot { width: 10px; height: 10px; border-radius: 50%; grid-row: span 2; border: 1.5px solid var(--muted); }
+.dot.approved { background: var(--ok); border-color: var(--ok); }
+.dot.changes { background: var(--stamp); border-color: var(--stamp); }
+.dot.revised { background: linear-gradient(90deg, var(--stamp) 50%, transparent 50%); border-color: var(--stamp); }
+.past { opacity: 0.55; }
+.empty-list { padding: 20px; color: var(--muted); font-style: italic; }
+
+main { padding: 28px 24px 60px; display: flex; justify-content: center; }
+.desk { width: 100%; max-width: 680px; }
+.meta { font-family: var(--font-type); color: var(--muted); font-size: 14px; display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.card { position: relative; background: var(--card); color: var(--card-ink); border-radius: 6px; box-shadow: 0 10px 30px rgb(10 6 4 / 25%); padding: 26px 30px 30px 54px;
+  background-image: linear-gradient(90deg, transparent 38px, var(--red-rule) 38px, var(--red-rule) 39.5px, transparent 39.5px); }
+.card h2 { margin: 0; font-size: 28px; line-height: 1.2; }
+.card h2.hidden { cursor: pointer; }
+.card h2.hidden span { filter: blur(9px); user-select: none; }
+.byline { color: var(--card-muted); margin: 6px 0 0; }
+.aliases { color: var(--card-muted); font-size: 13px; margin: 4px 0 0; font-style: italic; }
+.stamp { position: absolute; top: 22px; right: 22px; transform: rotate(-8deg); font-family: var(--font-type); font-size: 17px; letter-spacing: 0.08em; padding: 4px 10px; border: 3px double currentColor; border-radius: 4px; opacity: 0.85; }
+.stamp.approved { color: var(--ok); }
+.stamp.changes, .stamp.revised { color: var(--stamp); }
+.problems { margin: 18px 0 0; padding: 10px 14px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; font-size: 14px; }
+.problems ul { margin: 4px 0 0; padding-left: 18px; }
+.clues { list-style: none; margin: 22px 0 0; padding: 0; border-top: 1.5px solid var(--rule); }
+.clues li { border-bottom: 1.5px solid var(--rule); }
+.clues button { width: 100%; display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: baseline; text-align: left; background: transparent; border: 0; padding: 10px 6px; color: var(--card-ink); border-radius: 4px; }
+.clues button:hover { background: rgb(43 36 32 / 5%); }
+.clue-n { font-family: var(--font-type); color: var(--card-muted); }
+.clue-text { font-family: var(--font-type); font-size: 18px; }
+.clue-flag { font-family: var(--font-type); font-size: 12px; color: var(--card-muted); white-space: nowrap; }
+.clues li.flagged button { background: rgb(168 50 44 / 10%); }
+.clues li.flagged .clue-flag { color: var(--stamp); }
+.clue-help { font-size: 12px; color: var(--card-muted); margin: 8px 0 0; font-style: italic; }
+
+.verdict { margin-top: 22px; }
+.notice { margin: 0 0 12px; padding: 10px 14px; border-left: 3px solid var(--stamp); background: color-mix(in srgb, var(--stamp) 8%, transparent); font-size: 14px; }
+.notice q { font-style: italic; }
+label.note-label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--panel); font-size: 15px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 9px 16px; font-size: 14px; }
+.btn.approve { background: var(--ok); border-color: var(--ok); color: #fbf7ec; }
+.btn.changes { background: var(--stamp); border-color: var(--stamp); color: #fbf7ec; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn kbd { font-family: var(--font-type); font-size: 11px; opacity: 0.75; margin-left: 6px; }
+.spacer { flex: 1; }
+.saved { font-family: var(--font-type); font-size: 13px; color: var(--muted); min-height: 1.5em; margin-top: 8px; }
+.keys { margin-top: 28px; font-size: 12px; color: var(--muted); font-family: var(--font-type); }
+.keys kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+.blank { color: var(--muted); font-style: italic; text-align: center; margin-top: 60px; }
+
+@media (max-width: 760px) {
+  header { padding: 14px 16px; }
+  .controls { margin-left: 0; }
+  .layout { grid-template-columns: 1fr; }
+  aside { position: static; max-height: 240px; border-right: 0; border-bottom: 1px solid var(--line); }
+  main { padding: 20px 16px 48px; }
+  .card { padding: 22px 18px 24px 40px; background-image: linear-gradient(90deg, transparent 26px, var(--red-rule) 26px, var(--red-rule) 27.5px, transparent 27.5px); }
+  .card h2 { font-size: 23px; padding-right: 90px; }
+  .stamp { font-size: 13px; top: 16px; right: 12px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Plotline <span>Review desk</span></h1>
+  <div class="tally" id="tally"></div>
+  <div class="controls">
+    <div class="tabs" role="group" aria-label="Show">
+      <button data-filter="upcoming">Upcoming</button>
+      <button data-filter="needs">Needs review</button>
+      <button data-filter="all">All</button>
+    </div>
+    <button class="toggle" id="hide" title="Hide titles so you can test the Clues (H)">Hide titles</button>
+  </div>
+</header>
+<div class="layout">
+  <aside><ol id="list"></ol></aside>
+  <main><div class="desk" id="desk"></div></main>
+</div>
+<script>
+const DAY = 86_400_000;
+const STATUS_LABEL = { pending: 'Not reviewed', approved: 'Approved', changes: 'Changes requested', revised: 'Edited, review again' };
+
+const state = {
+  data: null,
+  filter: load('filter', 'upcoming'),
+  hideTitles: load('hideTitles', false),
+  revealed: new Set(),
+  selected: null,
+  draft: new Map(), // id -> { note, flagged: Set }
+  saved: '',
+};
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem(`plotline-review:${key}`); return v === null ? fallback : JSON.parse(v); } catch { return fallback; }
+}
+function store(key, value) {
+  try { localStorage.setItem(`plotline-review:${key}`, JSON.stringify(value)); } catch {}
+}
+
+const keyToMs = (key) => { const [y, m, d] = key.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+const msToKey = (ms) => new Date(ms).toISOString().slice(0, 10);
+const todayKey = () => { const n = new Date(); return msToKey(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())); };
+const fmtDate = (key) => new Date(keyToMs(key)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+function relative(days) {
+  if (days === 0) return 'today';
+  if (days === 1) return 'tomorrow';
+  if (days === -1) return 'yesterday';
+  return days > 0 ? `in ${days} days` : `${-days} days ago`;
+}
+
+function rows() {
+  const { puzzles, reviews, launchDate } = state.data;
+  const today = keyToMs(todayKey());
+  return puzzles.map((p) => {
+    const date = msToKey(keyToMs(launchDate) + (p.id - 1) * DAY);
+    const days = Math.round((keyToMs(date) - today) / DAY);
+    const review = reviews[p.id] ?? null;
+    let status = 'pending';
+    if (review) status = review.fingerprint === p.fingerprint ? review.status : 'revised';
+    return { ...p, date, days, review, status, needs: status === 'pending' || status === 'revised' };
+  });
+}
+
+function visible(all) {
+  if (state.filter === 'upcoming') return all.filter((r) => r.days > 0);
+  if (state.filter === 'needs') return all.filter((r) => r.needs && r.days >= 0);
+  return all;
+}
+
+function draftFor(row) {
+  if (!state.draft.has(row.id)) {
+    const r = row.review?.status === 'changes' && row.status !== 'revised' ? row.review : null;
+    state.draft.set(row.id, { note: r?.note ?? '', flagged: new Set(r?.flagged ?? []) });
+  }
+  return state.draft.get(row.id);
+}
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const showTitle = (row) => !state.hideTitles || state.revealed.has(row.id);
+
+function render() {
+  const all = rows();
+  const list = visible(all);
+  if (!list.some((r) => r.id === state.selected)) state.selected = (list.find((r) => r.needs) ?? list[0])?.id ?? null;
+
+  const upcoming = all.filter((r) => r.days > 0);
+  const last = all.at(-1);
+  const count = (s) => upcoming.filter((r) => r.status === s).length;
+  document.getElementById('tally').innerHTML = [
+    `<span><b>${upcoming.length}</b> upcoming</span>`,
+    `<span><b>${count('approved')}</b> approved</span>`,
+    `<span><b>${count('changes')}</b> changes asked</span>`,
+    count('revised') ? `<span><b>${count('revised')}</b> edited</span>` : '',
+    `<span><b>${count('pending')}</b> unread</span>`,
+    last ? `<span>runs out after <b>${fmtDate(last.date)}</b></span>` : '',
+  ].join('');
+
+  document.querySelectorAll('[data-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === state.filter)));
+  document.getElementById('hide').setAttribute('aria-pressed', String(state.hideTitles));
+
+  document.getElementById('list').innerHTML = list.length
+    ? list.map((r) => `
+      <li class="${r.days < 0 ? 'past' : ''}">
+        <button data-id="${r.id}" aria-current="${r.id === state.selected}">
+          <span class="num">#${r.id}</span>
+          <span class="li-title">${showTitle(r) ? esc(r.title) : '• • • • •'}</span>
+          <span class="dot ${r.status}" title="${STATUS_LABEL[r.status]}"></span>
+          <span class="li-date">${fmtDate(r.date)}${r.days === 0 ? ' · today' : ''}${r.problems.length ? ' · ⚠' : ''}</span>
+        </button>
+      </li>`).join('')
+    : `<li class="empty-list">${state.filter === 'needs' ? 'Nothing left to review.' : 'No Puzzles here.'}</li>`;
+
+  const row = all.find((r) => r.id === state.selected);
+  document.getElementById('desk').innerHTML = row ? deskHtml(row, list) : '<p class="blank">Pick a Puzzle.</p>';
+  document.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+}
+
+function deskHtml(row, list) {
+  const draft = draftFor(row);
+  const idx = list.findIndex((r) => r.id === row.id);
+  const hidden = !showTitle(row);
+  const stampText = { approved: 'APPROVED', changes: 'CHANGES', revised: 'EDITED' }[row.status];
+  const canRequest = draft.note.trim() || draft.flagged.size;
+  return `
+    <div class="meta"><span>Puzzle #${row.id} · ${fmtDate(row.date)} · ${relative(row.days)}</span><span>${STATUS_LABEL[row.status]}</span></div>
+    <article class="card">
+      ${stampText ? `<div class="stamp ${row.status}">${stampText}</div>` : ''}
+      <h2 class="${hidden ? 'hidden' : ''}" ${hidden ? 'id="reveal" title="Click to reveal"' : ''}><span>${esc(row.title)}</span></h2>
+      <p class="byline">${hidden ? 'Title hidden. Click it to reveal.' : `${esc(row.author)} · ${esc(row.published)}`}</p>
+      ${!hidden && row.aliases.length ? `<p class="aliases">Also accepts: ${row.aliases.map(esc).join(', ')}</p>` : ''}
+      ${row.problems.length ? `<div class="problems"><b>Fails the Clue checks</b><ul>${row.problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+      <ol class="clues">
+        ${row.clues.map((c, i) => `
+          <li class="${draft.flagged.has(i) ? 'flagged' : ''}">
+            <button data-clue="${i}" aria-pressed="${draft.flagged.has(i)}">
+              <span class="clue-n">${i + 1}.</span>
+              <span class="clue-text">${esc(c)}</span>
+              <span class="clue-flag">${draft.flagged.has(i) ? '✎ fix this' : ''}</span>
+            </button>
+          </li>`).join('')}
+      </ol>
+      <p class="clue-help">Click a Clue (or press 1–6) to flag it for a rewrite.</p>
+    </article>
+    <section class="verdict">
+      ${row.status === 'revised' ? `<p class="notice">Edited since you ${row.review.status === 'approved' ? 'approved it' : 'asked for changes'}${row.review.note ? `. You said: <q>${esc(row.review.note)}</q>` : '.'}</p>` : ''}
+      <label class="note-label" for="note">What should change?</label>
+      <textarea id="note" placeholder="e.g. Clue 2 gives too much away; swap it for something about the setting.">${esc(draft.note)}</textarea>
+      <div class="actions">
+        <button class="btn approve" id="approve">Approve<kbd>A</kbd></button>
+        <button class="btn changes" id="request" ${canRequest ? '' : 'disabled'} title="${canRequest ? '' : 'Write a note or flag a Clue first'}">Request changes<kbd>⌘↵</kbd></button>
+        ${row.review ? '<button class="btn" id="clear">Clear verdict</button>' : ''}
+        <span class="spacer"></span>
+        <button class="btn" id="prev" ${idx <= 0 ? 'disabled' : ''}>← Prev</button>
+        <button class="btn" id="next" ${idx < 0 || idx >= list.length - 1 ? 'disabled' : ''}>Next →</button>
+      </div>
+      <div class="saved" role="status">${esc(state.saved)}</div>
+    </section>
+    <p class="keys"><kbd>J</kbd>/<kbd>K</kbd> next/prev · <kbd>A</kbd> approve · <kbd>C</kbd> write a note · <kbd>1</kbd>–<kbd>6</kbd> flag a Clue · <kbd>H</kbd> hide titles</p>`;
+}
+
+async function fetchData() {
+  const res = await fetch('/api/puzzles');
+  state.data = await res.json();
+}
+
+async function verdict(status) {
+  const all = rows();
+  const row = all.find((r) => r.id === state.selected);
+  if (!row) return;
+  const draft = draftFor(row);
+  const body = status === 'changes' ? { status, note: draft.note, flagged: [...draft.flagged] } : { status };
+  if (status === 'changes' && !draft.note.trim() && !draft.flagged.size) return;
+  const res = await fetch(`/api/reviews/${row.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) { state.saved = `Couldn't save: ${(await res.json()).error}`; return render(); }
+  state.data = await res.json();
+  state.draft.delete(row.id);
+  state.saved = { approved: `#${row.id} approved.`, changes: `Changes requested on #${row.id}.`, pending: `Cleared #${row.id}.` }[status];
+  if (status !== 'pending') advance(row.id);
+  render();
+}
+
+// After a verdict, jump to the next Puzzle that still needs a look.
+function advance(fromId) {
+  const list = visible(rows());
+  const idx = list.findIndex((r) => r.id === fromId);
+  const next = list.slice(idx + 1).find((r) => r.needs) ?? list.find((r) => r.needs);
+  if (next) state.selected = next.id;
+}
+
+function step(delta) {
+  const list = visible(rows());
+  const idx = list.findIndex((r) => r.id === state.selected);
+  const next = list[Math.min(list.length - 1, Math.max(0, idx + delta))];
+  if (next) { state.selected = next.id; state.saved = ''; render(); }
+}
+
+function toggleClue(i) {
+  const row = rows().find((r) => r.id === state.selected);
+  if (!row || i >= row.clues.length) return;
+  const draft = draftFor(row);
+  draft.flagged.has(i) ? draft.flagged.delete(i) : draft.flagged.add(i);
+  render();
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, #reveal');
+  if (!t) return;
+  if (t.dataset.filter) { state.filter = t.dataset.filter; store('filter', state.filter); render(); }
+  else if (t.id === 'hide') { state.hideTitles = !state.hideTitles; state.revealed.clear(); store('hideTitles', state.hideTitles); render(); }
+  else if (t.dataset.id) { state.selected = Number(t.dataset.id); state.saved = ''; render(); }
+  else if (t.dataset.clue) toggleClue(Number(t.dataset.clue));
+  else if (t.id === 'reveal') { state.revealed.add(state.selected); render(); }
+  else if (t.id === 'approve') verdict('approved');
+  else if (t.id === 'request') verdict('changes');
+  else if (t.id === 'clear') verdict('pending');
+  else if (t.id === 'prev') step(-1);
+  else if (t.id === 'next') step(1);
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'note') return;
+  const row = rows().find((r) => r.id === state.selected);
+  draftFor(row).note = e.target.value;
+  const btn = document.getElementById('request');
+  const ok = e.target.value.trim() || draftFor(row).flagged.size;
+  btn.disabled = !ok;
+  btn.title = ok ? '' : 'Write a note or flag a Clue first';
+});
+
+document.addEventListener('keydown', (e) => {
+  const typing = e.target.id === 'note';
+  if (typing) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); verdict('changes'); }
+    if (e.key === 'Escape') e.target.blur();
+    return;
+  }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === 'j' || k === 'arrowdown') { e.preventDefault(); step(1); }
+  else if (k === 'k' || k === 'arrowup') { e.preventDefault(); step(-1); }
+  else if (k === 'a') verdict('approved');
+  else if (k === 'c') { e.preventDefault(); document.getElementById('note')?.focus(); }
+  else if (k === 'h') document.getElementById('hide').click();
+  else if (/^[1-6]$/.test(k)) toggleClue(Number(k) - 1);
+});
+
+// Pick up edits to puzzles.json when you come back to the tab.
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') { await fetchData(); render(); }
+});
+
+fetchData().then(render).catch((err) => {
+  document.getElementById('desk').innerHTML = `<p class="blank">Couldn't load Puzzles: ${esc(err.message)}</p>`;
+});
+</script>
+</body>
+</html>

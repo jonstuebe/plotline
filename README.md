@@ -56,6 +56,14 @@ npm run puzzle -- book.json --dry-run    # just check it
 
 The script refuses a Clue that isn't exactly five words, a title that shows up in the first four Clues, and a last Clue that doesn't name the author. It adds the title to the Suggestions (`src/lib/titles.json`) if it's missing. Then commit and `npm run deploy`. The build warns when fewer than 14 Puzzles are left after today.
 
+To read the upcoming Puzzles by date and approve each one or ask for changes:
+
+```sh
+npm run review                           # http://localhost:5180, local only
+```
+
+Verdicts and notes are saved to `worker/puzzle-reviews.json`. Editing a Puzzle after it was reviewed puts it back up for review. Neither the page nor that file is deployed: the Worker only imports `puzzles.json`.
+
 - Puzzle number = days since `LAUNCH_DATE` in `worker/puzzles.ts` (Puzzle #1 on launch day). When the list runs out, players see "Back tomorrow"; it never loops.
 - Clues run from deliberately unhelpful to giveaway: the fifth usually names the characters, the sixth the author.
 - `aliases` are other titles that also count, like `1984`. Case, accents, punctuation and a leading "The"/"A"/"An" never matter, so don't list those variants.
@@ -80,5 +88,7 @@ src/
   components/        Game, Shelf, GuessCard, Result, modals, toasts
 scripts/
   add-puzzle.mjs     npm run puzzle
+  puzzle-checks.mjs  the Clue rules, shared by puzzle and review
+  review-puzzles.mjs npm run review: the local review desk (review.html)
   make-icons.mjs     PWA icons (npm run icons)
 ```
