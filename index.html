@@ -20,9 +20,43 @@
         if (s.theme === 'light' || s.theme === 'dark') document.documentElement.dataset.theme = s.theme;
       } catch (e) {}
     </script>
+    <style>
+      /* Boot screen: paints before the JS bundle arrives. React replaces #root's
+         contents on first render, so it disappears on its own. Colours mirror
+         --bg and --tint in src/styles.css; the bars are the app icon's clue lines. */
+      html { background: #ffffff; --boot-tint: #0062c4; }
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme='light']) { background: #000000; --boot-tint: #409cff; }
+      }
+      html[data-theme='dark'] { background: #000000; --boot-tint: #409cff; }
+      html[data-theme='light'] { background: #ffffff; --boot-tint: #0062c4; }
+      .boot {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        opacity: 0; animation: boot-in 0.25s ease-out 0.15s forwards;
+      }
+      .boot-lines { display: grid; gap: 7px; width: 56px; }
+      .boot-lines i {
+        display: block; height: 9px; border-radius: 4.5px; background: var(--boot-tint);
+        opacity: 0.2; animation: boot-reveal 1.2s ease-in-out infinite;
+      }
+      .boot-lines i:nth-child(1) { width: 100%; }
+      .boot-lines i:nth-child(2) { width: 72%; animation-delay: 0.2s; }
+      .boot-lines i:nth-child(3) { width: 86%; animation-delay: 0.4s; }
+      @keyframes boot-in { to { opacity: 1; } }
+      @keyframes boot-reveal { 0%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .boot { animation-duration: 0s; }
+        .boot-lines i { animation: none; }
+        .boot-lines i:nth-child(1) { opacity: 1; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Loading Plotline">
+        <div class="boot-lines"><i></i><i></i><i></i></div>
+      </div>
+    </div>
     <noscript>Plotline needs JavaScript to run.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
