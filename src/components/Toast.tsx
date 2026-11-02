@@ -10,7 +10,7 @@ export function ToastList({ toasts }: { toasts: ToastMessage[] }) {
   return (
     <div className="toasts" role="status" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className="toast">
+        <div key={t.id} className="glass toast">
           {t.content}
         </div>
       ))}

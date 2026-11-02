@@ -17,3 +17,7 @@ The title list behind the Suggestions (`src/lib/titles.json`) does ship with the
 - Clues still on the shelf are never put in the DOM, only bars sized to their words, so today's later Clues need DevTools' network tab, not a glance at the page.
 - When the Puzzles run out the server returns 404 and the app shows "Back tomorrow". `npm run deploy` warns when fewer than 14 Puzzles remain.
 - The prototype's `#p<n>` preview link is gone: the client can no longer see any Puzzle but today's. Use `npm run puzzle -- book.json --dry-run` to check a Book before adding it.
+
+## Addendum: Movies
+
+Movies follow the same arrangement. `worker/movies.json` is served by `GET /api/movie/<YYYY-MM-DD>` under the same "today somewhere" rule, numbered from its own Launch date (`MOVIE_LAUNCH_DATE`), and cached on the client apart from the Book. Their Suggestions ship with the client in `src/lib/movie-titles.json`. The build warns when either list is about to run out.

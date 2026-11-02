@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { nextLocalMidnight } from '../lib/puzzle';
 
 interface CountdownProps {
+  /** "book" or "movie", as in "Next movie in". */
+  noun: string;
   /** Called once when the countdown reaches the next local midnight. */
   onExpire: () => void;
 }
@@ -12,7 +14,7 @@ export function formatDuration(ms: number): string {
   return `${pad(Math.floor(total / 3600))}:${pad(Math.floor((total % 3600) / 60))}:${pad(total % 60)}`;
 }
 
-export function Countdown({ onExpire }: CountdownProps) {
+export function Countdown({ noun, onExpire }: CountdownProps) {
   const [target] = useState(() => nextLocalMidnight(new Date()).getTime());
   const [remaining, setRemaining] = useState(() => target - Date.now());
 
@@ -33,7 +35,7 @@ export function Countdown({ onExpire }: CountdownProps) {
 
   return (
     <div className="countdown">
-      <span>Next book due in</span>
+      <span>Next {noun} in</span>
       <time className="countdown-time">{formatDuration(remaining)}</time>
     </div>
   );

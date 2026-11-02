@@ -6,10 +6,12 @@ import {
   effectiveStreak,
   emptyRecord,
   loadState,
+  progressFor,
   recordFor,
   recordProgress,
   recordResult,
   saveState,
+  withProgress,
   wonPercent,
   type GameState,
   type PuzzleRecord,
@@ -136,5 +138,29 @@ describe('wonPercent', () => {
   it('rounds, and is 0 with nothing played', () => {
     expect(wonPercent(defaultState().stats)).toBe(0);
     expect(wonPercent({ ...defaultState().stats, played: 3, won: 2 })).toBe(67);
+  });
+});
+
+describe('Books and Movies', () => {
+  it('reads a save from before Movies, keeping every Book result and streak', () => {
+    const before = { results: { 4: won() }, stats: { ...defaultState().stats, played: 4, won: 4, currentStreak: 4, maxStreak: 4, lastPuzzle: 4, lastWon: true }, settings: { theme: 'dark' }, seenHelp: true };
+    const state = loadState(stored(before));
+    expect(state.results).toEqual(before.results);
+    expect(state.stats.currentStreak).toBe(4);
+    expect(state.movie).toEqual({ results: {}, stats: defaultState().stats });
+    expect(state.mode).toBe('book');
+  });
+
+  it('keeps Movie results and stats apart from the Books', () => {
+    const state = withProgress(defaultState(), 'movie', recordResult(progressFor(defaultState(), 'movie'), 1, won()));
+    expect(state.movie.stats.played).toBe(1);
+    expect(state.stats.played).toBe(0);
+    expect(recordFor(progressFor(state, 'movie'), 1)).toEqual(won());
+    expect(loadState(stored(state)).movie).toEqual(state.movie);
+  });
+
+  it('remembers the last tab, and ignores one it doesn’t know', () => {
+    expect(loadState(stored({ mode: 'movie' })).mode).toBe('movie');
+    expect(loadState(stored({ mode: 'tv' })).mode).toBe('book');
   });
 });

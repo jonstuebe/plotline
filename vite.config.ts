@@ -7,9 +7,10 @@ import type { Plugin } from 'vite';
 
 import pkg from './package.json' with { type: 'json' };
 import puzzles from './worker/puzzles.json' with { type: 'json' };
-import { RUNWAY_WARNING_DAYS, parseDateKey, puzzleNumber } from './worker/puzzles.ts';
+import movies from './worker/movies.json' with { type: 'json' };
+import { MOVIE_LAUNCH_DATE, RUNWAY_WARNING_DAYS, parseDateKey, puzzleNumber } from './worker/puzzles.ts';
 
-const THEME_COLOR = '#6A4223';
+const THEME_COLOR = '#ffffff';
 
 export default defineConfig({
   define: {
@@ -27,7 +28,7 @@ export default defineConfig({
       manifest: {
         name: 'Plotline',
         short_name: 'Plotline',
-        description: 'A daily book game: guess today’s famous book from summaries exactly five words long.',
+        description: 'A daily book and movie game: guess today’s famous book and movie from summaries exactly five words long.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
@@ -41,7 +42,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,json,webmanifest}', 'icons/*.png', '**/*-latin-{400,700}-{normal,italic}-*.woff2'],
+        globPatterns: ['**/*.{js,css,html,svg,json,webmanifest}', 'icons/*.png'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
@@ -54,7 +55,7 @@ export default defineConfig({
   },
 });
 
-/** Warns on every build (and so every deploy) when the Puzzles are about to run out. */
+/** Warns on every build (and so every deploy) when either mode's Puzzles are about to run out. */
 function puzzleRunway(): Plugin {
   return {
     name: 'plotline:puzzle-runway',
@@ -62,10 +63,15 @@ function puzzleRunway(): Plugin {
     buildStart() {
       // Runs once per environment; report from the client build only.
       if (this.environment.name !== 'client') return;
-      const today = new Date().toISOString().slice(0, 10);
-      const left = puzzles.length - puzzleNumber(parseDateKey(today)!);
-      if (left < RUNWAY_WARNING_DAYS) {
-        this.warn(`Only ${Math.max(0, left)} Puzzles left after today (${puzzles.length} in worker/puzzles.json). Add more before players see "Back tomorrow".`);
+      const today = parseDateKey(new Date().toISOString().slice(0, 10))!;
+      const runway = [
+        { name: 'Book Puzzles', file: 'worker/puzzles.json', count: puzzles.length, left: puzzles.length - puzzleNumber(today) },
+        { name: 'Movie Puzzles', file: 'worker/movies.json', count: movies.length, left: movies.length - puzzleNumber(today, MOVIE_LAUNCH_DATE) },
+      ];
+      for (const { name, file, count, left } of runway) {
+        if (left < RUNWAY_WARNING_DAYS) {
+          this.warn(`Only ${Math.max(0, left)} ${name} left after today (${count} in ${file}). Add more before players see "Back tomorrow".`);
+        }
       }
     },
   };

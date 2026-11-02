@@ -1,24 +1,30 @@
-import { useCallback, useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Puzzle } from '../lib/types';
-import { MAX_TRIES, checkGuess, cluesShown, guess, skip } from '../lib/game';
+import { checkGuess, cluesShown, guess, skip } from '../lib/game';
+import { MODE_INFO, type Mode } from '../lib/mode';
 import type { PuzzleRecord } from '../lib/storage';
-import { Shelf } from './Shelf';
-import { GuessCard } from './GuessCard';
+import { ClueList, CurrentClue } from './Clues';
+import { GuessField } from './GuessField';
 import { Result } from './Result';
 
 interface GameProps {
+  mode: Mode;
   puzzle: Puzzle;
   puzzleNumber: number;
-  /** Today's date as shown above the shelf. */
-  date: string;
   record: PuzzleRecord;
+  /** True while the other mode's Puzzle is still open today. */
+  otherOpen: boolean;
+  onPlayOther: () => void;
   onRecord: (record: PuzzleRecord) => void;
   onAnnounce: (message: string) => void;
   onToast: (message: string) => void;
   onExpire: () => void;
+  /** The tab bar, which floats under the guess field. */
+  tabBar: ReactNode;
 }
 
-export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce, onToast, onExpire }: GameProps) {
+/** One mode's Puzzle for today: the Clue in play or the reveal, the Clues so far, and the floating guess field. */
+export function Game({ mode, puzzle, puzzleNumber, record, otherOpen, onPlayOther, onRecord, onAnnounce, onToast, onExpire, tabBar }: GameProps) {
   const [problem, setProblem] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
 
@@ -38,7 +44,7 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
       setShake((n) => n + 1);
       return false;
     }
-    const next = guess(puzzle, record, raw);
+    const next = guess(puzzle, record, raw, MODE_INFO[mode].titles);
     setProblem(null);
     onRecord(next);
     announce(next, next.guesses.at(-1) ?? null);
@@ -52,43 +58,29 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
     announce(next, null);
   };
 
-  // On a phone the keyboard covers half the screen: bring the newest Clue up to the top.
-  const onTyping = useCallback(() => {
-    const latest = document.querySelector('.spine.latest');
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    latest?.scrollIntoView?.({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
-  }, []);
-
   return (
     <>
-      <div className="meta">
-        <span>
-          <strong>No. {puzzleNumber}</strong>, {date}
-        </span>
+      <main className="content">
         {playing ? (
-          <span>
-            Try {record.guesses.length + 1} of {MAX_TRIES}
-          </span>
-        ) : null}
+          <CurrentClue mode={mode} clue={puzzle.clues[shown - 1]} number={shown} onSkip={onSkip} />
+        ) : (
+          <Result
+            mode={mode}
+            puzzle={puzzle}
+            puzzleNumber={puzzleNumber}
+            record={record}
+            otherOpen={otherOpen}
+            onPlayOther={onPlayOther}
+            onExpire={onExpire}
+            onToast={onToast}
+          />
+        )}
+        <ClueList clues={puzzle.clues} record={record} shown={shown} />
+      </main>
+      <div className="bottom">
+        {playing ? <GuessField key={mode} mode={mode} record={record} problem={problem} shake={shake} onGuess={onGuess} onEdit={() => setProblem(null)} /> : null}
+        {tabBar}
       </div>
-
-      <Shelf clues={puzzle.clues} shown={shown} puzzleNumber={puzzleNumber} playing={playing} />
-
-      {playing ? (
-        <GuessCard
-          record={record}
-          clue={puzzle.clues[shown - 1]}
-          clueNumber={shown}
-          problem={problem}
-          shake={shake}
-          onGuess={onGuess}
-          onSkip={onSkip}
-          onTyping={onTyping}
-          onEdit={() => setProblem(null)}
-        />
-      ) : (
-        <Result puzzle={puzzle} puzzleNumber={puzzleNumber} record={record} onExpire={onExpire} onToast={onToast} />
-      )}
     </>
   );
 }

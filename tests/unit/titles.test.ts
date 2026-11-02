@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TITLES, canonicalTitle, normalizeTitle, suggest } from '../../src/lib/titles';
+import { MOVIE_TITLES, TITLES, canonicalTitle, normalizeTitle, suggest } from '../../src/lib/titles';
 
 const titles = (list: ReturnType<typeof suggest>) => list.map((t) => t.title);
 
@@ -63,5 +63,12 @@ describe('suggest', () => {
 
   it('goes quiet once the query is the only match', () => {
     expect(suggest('the hobbit')).toEqual([]);
+  });
+});
+
+describe('Movie Suggestions', () => {
+  it('come from the Movie list, not the Books', () => {
+    expect(suggest('casa', [], MOVIE_TITLES).map((t) => t.title)).toEqual(['Casablanca']);
+    expect(suggest('casa', [], TITLES).map((t) => t.title)).not.toContain('Casablanca');
   });
 });

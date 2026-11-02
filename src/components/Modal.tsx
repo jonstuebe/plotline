@@ -9,7 +9,7 @@ interface ModalProps {
   className?: string;
 }
 
-/** Native <dialog>: focus trapping, Escape to close, and inert background for free. */
+/** An iOS-style sheet on a native <dialog>: focus trapping, Escape to close, and inert background for free. */
 export function Modal({ title, open, onClose, children, className }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -41,10 +41,10 @@ export function Modal({ title, open, onClose, children, className }: ModalProps)
       }}
     >
       {open ? (
-        <div className="modal-body">
-          <div className="modal-header">
+        <div className="sheet">
+          <div className="sheet-header">
             <h2 id={titleId}>{title}</h2>
-            <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+            <button type="button" className="glass round sheet-close" onClick={onClose} aria-label="Close">
               <CloseIcon />
             </button>
           </div>

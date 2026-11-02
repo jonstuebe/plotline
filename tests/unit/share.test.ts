@@ -56,3 +56,9 @@ describe('shareResults', () => {
     await expect(shareResults('x', nav({}))).resolves.toBe('failed');
   });
 });
+
+describe('buildShareText for a Movie', () => {
+  it('names Plotline Movies and leads with a clapper', () => {
+    expect(buildShareText(3, record(['Alien', 'Jaws'], 'won'), 'movie')).toBe('Plotline Movies #3 2/6\n\n🎬 🟥🟩⬛⬛⬛⬛\n\nplotline.jonstuebe.com');
+  });
+});

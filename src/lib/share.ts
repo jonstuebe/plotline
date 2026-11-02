@@ -1,4 +1,5 @@
 import { MAX_TRIES } from './game';
+import { MODE_INFO, type Mode } from './mode';
 import type { PuzzleRecord } from './storage';
 
 export const GAME_URL = 'plotline.jonstuebe.com';
@@ -24,8 +25,10 @@ export function scoreText(record: PuzzleRecord): string {
   return `${record.status === 'won' ? record.guesses.length : 'X'}/${MAX_TRIES}`;
 }
 
-export function buildShareText(puzzleNumber: number, record: PuzzleRecord): string {
-  return `Plotline #${puzzleNumber} ${scoreText(record)}\n\n📖 ${resultLine(record)}\n\n${GAME_URL}`;
+/** Books keep the original "Plotline #12"; Movies count separately, so they say so: "Plotline Movies #3". */
+export function buildShareText(puzzleNumber: number, record: PuzzleRecord, mode: Mode = 'book'): string {
+  const name = mode === 'movie' ? 'Plotline Movies' : 'Plotline';
+  return `${name} #${puzzleNumber} ${scoreText(record)}\n\n${MODE_INFO[mode].emoji} ${resultLine(record)}\n\n${GAME_URL}`;
 }
 
 export type ShareOutcome = 'shared' | 'copied' | 'aborted' | 'failed';

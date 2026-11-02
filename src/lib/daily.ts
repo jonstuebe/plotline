@@ -1,7 +1,9 @@
 import type { Puzzle } from './types';
 import { daysBetween } from './puzzle';
+import { MODE_INFO, type Mode } from './mode';
 
-export const PUZZLE_CACHE_KEY = 'plotline:puzzle';
+/** Where today's Book is cached; Movies use MODE_INFO.movie.cacheKey. */
+export const PUZZLE_CACHE_KEY = MODE_INFO.book.cacheKey;
 
 export interface DailyPuzzle {
   date: string;
@@ -18,9 +20,9 @@ export type Daily =
   | { status: 'offline' };
 
 /** The cached Puzzle, whatever date it was for. */
-export function readCachedPuzzle(storage: Storage | undefined = safeStorage()): DailyPuzzle | null {
+export function readCachedPuzzle(storage: Storage | undefined = safeStorage(), mode: Mode = 'book'): DailyPuzzle | null {
   try {
-    const raw = storage?.getItem(PUZZLE_CACHE_KEY);
+    const raw = storage?.getItem(MODE_INFO[mode].cacheKey);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DailyPuzzle;
     const valid = typeof parsed?.date === 'string' && typeof parsed.number === 'number' && typeof parsed.puzzle?.title === 'string' && Array.isArray(parsed.puzzle.aliases) && Array.isArray(parsed.puzzle.clues);
@@ -31,18 +33,18 @@ export function readCachedPuzzle(storage: Storage | undefined = safeStorage()): 
 }
 
 /** Today's Puzzle from the cache, so a game started online keeps working offline. */
-export function cachedDaily(date: string, storage?: Storage): Daily | null {
-  const cached = readCachedPuzzle(storage);
+export function cachedDaily(date: string, storage?: Storage, mode: Mode = 'book'): Daily | null {
+  const cached = readCachedPuzzle(storage, mode);
   return cached?.date === date ? { status: 'ready', ...cached } : null;
 }
 
 /** Fetches the Puzzle for a local date, falling back to the cache when offline. */
-export async function loadDaily(date: string, fetcher: typeof fetch = fetch, storage: Storage | undefined = safeStorage()): Promise<Daily> {
-  const cached = cachedDaily(date, storage);
+export async function loadDaily(date: string, fetcher: typeof fetch = fetch, storage: Storage | undefined = safeStorage(), mode: Mode = 'book'): Promise<Daily> {
+  const cached = cachedDaily(date, storage, mode);
   if (cached) return cached;
   let res: Response;
   try {
-    res = await fetcher(`/api/puzzle/${date}`);
+    res = await fetcher(`${MODE_INFO[mode].api}/${date}`);
   } catch {
     return { status: 'offline' };
   }
@@ -52,7 +54,7 @@ export async function loadDaily(date: string, fetcher: typeof fetch = fetch, sto
     const body = (await res.json()) as { number: number; puzzle: Puzzle };
     const daily: DailyPuzzle = { date, number: body.number, puzzle: body.puzzle };
     try {
-      storage?.setItem(PUZZLE_CACHE_KEY, JSON.stringify(daily));
+      storage?.setItem(MODE_INFO[mode].cacheKey, JSON.stringify(daily));
     } catch {
       // Blocked storage: playable now, just not offline later.
     }
@@ -66,8 +68,8 @@ export async function loadDaily(date: string, fetcher: typeof fetch = fetch, sto
  * Today's Puzzle number when the Puzzle itself isn't available, counted on
  * from the last one seen. Lets stats show a broken streak while offline.
  */
-export function estimatedPuzzleNumber(date: string, storage?: Storage): number | null {
-  const cached = readCachedPuzzle(storage);
+export function estimatedPuzzleNumber(date: string, storage?: Storage, mode: Mode = 'book'): number | null {
+  const cached = readCachedPuzzle(storage, mode);
   return cached ? cached.number + daysBetween(cached.date, date) : null;
 }
 

@@ -9,32 +9,26 @@ interface SettingsModalProps {
 }
 
 const THEMES: { value: ThemeSetting; label: string }[] = [
-  { value: 'system', label: 'Auto' },
-  { value: 'light', label: 'Day' },
-  { value: 'dark', label: 'Lamplight' },
+  { value: 'system', label: 'Automatic' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
 ];
 
 export function SettingsModal({ open, onClose, settings, onChange }: SettingsModalProps) {
   return (
     <Modal title="Settings" open={open} onClose={onClose}>
       <fieldset className="setting">
-        <legend className="setting-name">Theme</legend>
+        <legend className="group-title">Appearance</legend>
         <div className="segmented">
           {THEMES.map((t) => (
             <label key={t.value} className="segment">
-              <input
-                type="radio"
-                name="theme"
-                value={t.value}
-                checked={settings.theme === t.value}
-                onChange={() => onChange({ ...settings, theme: t.value })}
-              />
+              <input type="radio" name="theme" value={t.value} checked={settings.theme === t.value} onChange={() => onChange({ ...settings, theme: t.value })} />
               <span>{t.label}</span>
             </label>
           ))}
         </div>
       </fieldset>
-      <p className="setting-footer">Plotline v{__APP_VERSION__} · Works offline once loaded</p>
+      <p className="footnote">Plotline v{__APP_VERSION__} · Works offline once loaded</p>
     </Modal>
   );
 }

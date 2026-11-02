@@ -77,3 +77,16 @@ describe('estimatedPuzzleNumber', () => {
     expect(estimatedPuzzleNumber('2026-10-30', memoryStorage())).toBeNull();
   });
 });
+
+describe('Movies', () => {
+  it('fetch from the Movie route and cache apart from the Book', async () => {
+    const storage = cached(DAILY);
+    const movie = { number: 3, puzzle: puzzle({ title: 'Jaws' }) };
+    const fetcher = respond(movie);
+    await expect(loadDaily('2026-10-27', fetcher, storage, 'movie')).resolves.toMatchObject({ status: 'ready', number: 3 });
+    expect(fetcher).toHaveBeenCalledWith('/api/movie/2026-10-27');
+    expect(readCachedPuzzle(storage, 'movie')?.puzzle.title).toBe('Jaws');
+    // The Book's cache is untouched.
+    expect(readCachedPuzzle(storage)).toEqual(DAILY);
+  });
+});

@@ -1,7 +1,10 @@
 import type { Puzzle } from '../src/lib/types.ts';
 
-/** Puzzle #1 is played on this local date. */
+/** Book Puzzle #1 is played on this local date. */
 export const LAUNCH_DATE = '2026-10-27';
+
+/** Movie Puzzle #1 is played on this local date. Movies count their own numbers from here. */
+export const MOVIE_LAUNCH_DATE = '2026-11-01';
 
 /** Puzzles left before players see "Back tomorrow"; the build warns below this. */
 export const RUNWAY_WARNING_DAYS = 14;
@@ -22,8 +25,8 @@ export function parseDateKey(key: string): number | null {
 }
 
 /** The Puzzle number for a valid date key: #1 on the Launch date, 0 or less before it. */
-export function puzzleNumber(dateMs: number): number {
-  return Math.round((dateMs - parseDateKey(LAUNCH_DATE)!) / DAY_MS) + 1;
+export function puzzleNumber(dateMs: number, launchDate: string = LAUNCH_DATE): number {
+  return Math.round((dateMs - parseDateKey(launchDate)!) / DAY_MS) + 1;
 }
 
 /**
@@ -35,10 +38,10 @@ export function isTodaySomewhere(dateMs: number, now: number): boolean {
 }
 
 /** The Puzzle for a date key, or null before launch, after the list runs out, or for a bad key. */
-export function puzzleForDate(puzzles: Puzzle[], key: string): { number: number; puzzle: Puzzle } | null {
+export function puzzleForDate(puzzles: Puzzle[], key: string, launchDate: string = LAUNCH_DATE): { number: number; puzzle: Puzzle } | null {
   const ms = parseDateKey(key);
   if (ms === null) return null;
-  const number = puzzleNumber(ms);
+  const number = puzzleNumber(ms, launchDate);
   const puzzle = puzzles[number - 1];
   return number >= 1 && puzzle ? { number, puzzle } : null;
 }

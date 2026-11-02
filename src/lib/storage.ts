@@ -1,4 +1,5 @@
 import { MAX_TRIES } from './game';
+import { MODES, type Mode } from './mode';
 
 export const STORAGE_KEY = 'plotline:v1';
 
@@ -28,9 +29,20 @@ export interface Settings {
   theme: ThemeSetting;
 }
 
-export interface GameState {
+/** One mode's history: its finished and in-progress Puzzles, by number, and its stats. */
+export interface Progress {
   results: Record<number, PuzzleRecord>;
   stats: Stats;
+}
+
+/**
+ * Everything saved. Books keep the top-level results and stats they always had, so existing
+ * players lose nothing; Movies, which number their Puzzles separately, keep theirs under `movie`.
+ */
+export interface GameState extends Progress {
+  movie: Progress;
+  /** The tab the player was last on. */
+  mode: Mode;
   settings: Settings;
   seenHelp: boolean;
 }
@@ -38,13 +50,29 @@ export interface GameState {
 export const DISTRIBUTION_LABELS = [...Array.from({ length: MAX_TRIES }, (_, i) => String(i + 1)), 'X'];
 const OVERDUE_SLOT = DISTRIBUTION_LABELS.length - 1;
 
+function defaultStats(): Stats {
+  return { played: 0, won: 0, currentStreak: 0, maxStreak: 0, distribution: Array(DISTRIBUTION_LABELS.length).fill(0), lastPuzzle: null, lastWon: false };
+}
+
 export function defaultState(): GameState {
   return {
     results: {},
-    stats: { played: 0, won: 0, currentStreak: 0, maxStreak: 0, distribution: Array(DISTRIBUTION_LABELS.length).fill(0), lastPuzzle: null, lastWon: false },
+    stats: defaultStats(),
+    movie: { results: {}, stats: defaultStats() },
+    mode: 'book',
     settings: { theme: 'system' },
     seenHelp: false,
   };
+}
+
+/** A mode's history within the saved state. */
+export function progressFor(state: GameState, mode: Mode): Progress {
+  return mode === 'movie' ? state.movie : state;
+}
+
+/** The state with one mode's history replaced. */
+export function withProgress(state: GameState, mode: Mode, progress: Progress): GameState {
+  return mode === 'movie' ? { ...state, movie: { results: progress.results, stats: progress.stats } } : { ...state, results: progress.results, stats: progress.stats };
 }
 
 export function emptyRecord(): PuzzleRecord {
@@ -59,18 +87,25 @@ export function loadState(storage: Storage | undefined = safeStorage()): GameSta
     if (!raw) return base;
     const parsed = JSON.parse(raw) as Partial<GameState>;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return base;
-    const distribution = Array.isArray(parsed.stats?.distribution) && parsed.stats.distribution.length === DISTRIBUTION_LABELS.length
-      ? parsed.stats.distribution.map((n) => Number(n) || 0)
-      : base.stats.distribution;
+    const movie = parsed.movie && typeof parsed.movie === 'object' ? parsed.movie : null;
     return {
       results: sanitizeResults(parsed.results),
-      stats: { ...base.stats, ...parsed.stats, distribution },
+      stats: sanitizeStats(parsed.stats),
+      movie: { results: sanitizeResults(movie?.results), stats: sanitizeStats(movie?.stats) },
+      mode: MODES.includes(parsed.mode as Mode) ? (parsed.mode as Mode) : base.mode,
       settings: { ...base.settings, ...parsed.settings },
       seenHelp: parsed.seenHelp === true,
     };
   } catch {
     return base;
   }
+}
+
+function sanitizeStats(stats: Partial<Stats> | undefined): Stats {
+  const base = defaultStats();
+  if (!stats || typeof stats !== 'object') return base;
+  const distribution = Array.isArray(stats.distribution) && stats.distribution.length === DISTRIBUTION_LABELS.length ? stats.distribution.map((n) => Number(n) || 0) : base.distribution;
+  return { ...base, ...stats, distribution };
 }
 
 function sanitizeResults(results: unknown): Record<number, PuzzleRecord> {
@@ -96,12 +131,12 @@ export function saveState(state: GameState, storage: Storage | undefined = safeS
 }
 
 /** The Puzzle as the player left it, or a fresh one. */
-export function recordFor(state: GameState, puzzle: number): PuzzleRecord {
+export function recordFor(state: Progress, puzzle: number): PuzzleRecord {
   return state.results[puzzle] ?? emptyRecord();
 }
 
 /** Saves a try mid-game. Stats stay untouched until the Puzzle finishes. */
-export function recordProgress(state: GameState, puzzle: number, record: PuzzleRecord): GameState {
+export function recordProgress<P extends Progress>(state: P, puzzle: number, record: PuzzleRecord): P {
   return { ...state, results: { ...state.results, [puzzle]: record } };
 }
 
@@ -114,7 +149,7 @@ export function distributionSlot(record: PuzzleRecord): number {
  * Records a finished Puzzle, stats included. A no-op once that Puzzle has a
  * finished record, so a Puzzle can never be counted twice.
  */
-export function recordResult(state: GameState, puzzle: number, record: PuzzleRecord): GameState {
+export function recordResult<P extends Progress>(state: P, puzzle: number, record: PuzzleRecord): P {
   const existing = state.results[puzzle];
   if (existing && existing.status !== 'playing') return state;
   if (record.status === 'playing') return recordProgress(state, puzzle, record);

@@ -1,27 +1,33 @@
 import { useState } from 'react';
 import type { Puzzle } from '../lib/types';
-import { MAX_TRIES } from '../lib/game';
+import { MODE_INFO, otherMode, type Mode } from '../lib/mode';
 import type { PuzzleRecord } from '../lib/storage';
 import { buildShareText, shareResults } from '../lib/share';
 import { Countdown } from './Countdown';
+import { MODE_ICON } from './Clues';
 import { ShareIcon } from './Icons';
 
 interface ResultProps {
+  mode: Mode;
   puzzle: Puzzle;
   puzzleNumber: number;
   record: PuzzleRecord;
+  /** True while the other mode's Puzzle is still open today, to offer it. */
+  otherOpen: boolean;
+  onPlayOther: () => void;
   onExpire: () => void;
   onToast: (message: string) => void;
 }
 
-/** The date-due slip: the Book revealed, Checked out or Overdue, and Share. */
-export function Result({ puzzle, puzzleNumber, record, onExpire, onToast }: ResultProps) {
+/** The reveal: the answer, how it went, Share, and the countdown to tomorrow's. */
+export function Result({ mode, puzzle, puzzleNumber, record, otherOpen, onPlayOther, onExpire, onToast }: ResultProps) {
   const [manual, setManual] = useState<string | null>(null);
   const won = record.status === 'won';
   const tries = record.guesses.length;
+  const text = buildShareText(puzzleNumber, record, mode);
+  const Icon = MODE_ICON[mode];
 
   const share = async () => {
-    const text = buildShareText(puzzleNumber, record);
     const outcome = await shareResults(text);
     if (outcome === 'copied') onToast('Copied results to clipboard');
     if (outcome === 'failed') {
@@ -31,23 +37,32 @@ export function Result({ puzzle, puzzleNumber, record, onExpire, onToast }: Resu
   };
 
   return (
-    <section className="result" aria-label="Result">
-      <div className="slip">
-        <p className="slip-head">Date Due</p>
-        <p className="kicker">{won ? (tries === 1 ? 'Checked out on the first clue' : 'Checked out') : 'Today’s book was'}</p>
-        <h2 className="book-title">{puzzle.title}</h2>
-        <p className="by">
-          {puzzle.author}, {puzzle.published}
-        </p>
-        <p className="score">{won ? `Solved on clue ${tries} of ${MAX_TRIES}.` : 'Six clues down. Tomorrow’s another book.'}</p>
-        <span className={won ? 'stamp' : 'stamp lost'}>{won ? `Checked out · Clue ${tries}` : 'Overdue'}</span>
-        <Countdown onExpire={onExpire} />
+    <section className="card result" aria-label="Result">
+      <p className="context">
+        <Icon />
+        {won ? (tries === 1 ? 'Solved on the first clue' : `Solved on clue ${tries}`) : 'Out of clues'}
+      </p>
+      <h2 className="answer">{puzzle.title}</h2>
+      <p className="by">
+        {MODE_INFO[mode].byPrefix}
+        {puzzle.author} · {puzzle.published}
+      </p>
+      <div className="actions">
+        <button className="btn btn-tint" type="button" onClick={share}>
+          <ShareIcon />
+          Share Result
+        </button>
+        {otherOpen ? (
+          <button className="btn btn-plain" type="button" onClick={onPlayOther}>
+            Play Today’s {MODE_INFO[otherMode(mode)].label}
+          </button>
+        ) : null}
       </div>
-      <button className="share" type="button" onClick={share}>
-        Share
-        <ShareIcon />
-      </button>
+      <pre className="share-preview" aria-label="Your result">
+        {text}
+      </pre>
       {manual ? <textarea className="manual" readOnly aria-label="Your result to copy" value={manual} onFocus={(e) => e.target.select()} /> : null}
+      <Countdown noun={MODE_INFO[mode].noun} onExpire={onExpire} />
     </section>
   );
 }

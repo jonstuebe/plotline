@@ -1,9 +1,6 @@
 // The two daily modes, and where each keeps its Puzzles, review verdicts and Suggestions.
 // Shared by npm run puzzle and npm run review.
-import { LAUNCH_DATE } from '../worker/puzzles.ts';
-
-/** Placeholder until Movies has a real launch date; the review desk dates Movie Puzzles from it. */
-export const MOVIE_LAUNCH_DATE = '2026-11-02';
+import { LAUNCH_DATE, MOVIE_LAUNCH_DATE } from '../worker/puzzles.ts';
 
 const file = (path) => new URL(`../${path}`, import.meta.url);
 

@@ -4,7 +4,7 @@ import { TEST_PUZZLE, guess, openGame, stubPuzzle } from './helpers';
 test('says so when there is no connection and nothing cached', async ({ page }) => {
   await page.route('**/api/puzzle/*', (route) => route.abort());
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'No connection' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No Connection' })).toBeVisible();
 });
 
 test('recovers when the network comes back', async ({ page }) => {
@@ -14,11 +14,11 @@ test('recovers when the network comes back', async ({ page }) => {
   );
 
   await page.goto('/');
-  await page.getByRole('button', { name: 'Start reading' }).click();
-  await expect(page.getByRole('heading', { name: 'No connection' })).toBeVisible();
+  await page.getByRole('button', { name: 'Start Playing' }).click();
+  await expect(page.getByRole('heading', { name: 'No Connection' })).toBeVisible();
   online = true;
-  await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByText('Try 1 of 6')).toBeVisible();
+  await page.getByRole('button', { name: 'Try Again' }).click();
+  await expect(page.getByText(/Clue 1 of 6/)).toBeVisible();
 });
 
 test('a game started online keeps playing offline', async ({ page }) => {
@@ -31,7 +31,7 @@ test('a game started online keeps playing offline', async ({ page }) => {
   await page.route('**/api/puzzle/*', (route) => route.abort());
   await page.reload();
 
-  await expect(page.getByText('Try 2 of 6')).toBeVisible();
+  await expect(page.getByText(/Clue 2 of 6/)).toBeVisible();
   await guess(page, '1984');
   await expect(page.getByRole('heading', { name: 'Nineteen Eighty-Four' })).toBeVisible();
 });
@@ -39,5 +39,5 @@ test('a game started online keeps playing offline', async ({ page }) => {
 test('says "back tomorrow" when there is no Puzzle for today', async ({ page }) => {
   await page.route('**/api/puzzle/*', (route) => route.fulfill({ status: 404, contentType: 'application/json', body: '{}' }));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Back tomorrow' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Back Tomorrow' })).toBeVisible();
 });

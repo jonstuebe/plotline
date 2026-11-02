@@ -1,6 +1,6 @@
 import type { Puzzle } from './types';
 import type { PuzzleRecord } from './storage';
-import { canonicalTitle, normalizeTitle } from './titles';
+import { TITLES, canonicalTitle, normalizeTitle, type Title } from './titles';
 
 /** Tries per Puzzle: one per Clue. */
 export const MAX_TRIES = 6;
@@ -19,9 +19,9 @@ export function checkGuess(record: PuzzleRecord, raw: string): string | null {
   return null;
 }
 
-/** Takes a Guess that `checkGuess` allowed: the Book is checked out, or the next Clue comes down. */
-export function guess(puzzle: Puzzle, record: PuzzleRecord, raw: string): PuzzleRecord {
-  const guesses = [...record.guesses, canonicalTitle(raw)];
+/** Takes a Guess that `checkGuess` allowed: the Puzzle is solved, or the next Clue comes down. */
+export function guess(puzzle: Puzzle, record: PuzzleRecord, raw: string, titles: Title[] = TITLES): PuzzleRecord {
+  const guesses = [...record.guesses, canonicalTitle(raw, titles)];
   if (isAnswer(puzzle, raw)) return { guesses, status: 'won' };
   return { guesses, status: guesses.length >= MAX_TRIES ? 'lost' : 'playing' };
 }

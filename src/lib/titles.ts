@@ -1,4 +1,5 @@
 import titlesData from './titles.json';
+import movieTitlesData from './movie-titles.json';
 
 export interface Title {
   /** As shown in Suggestions and recorded as a Guess. */
@@ -22,8 +23,11 @@ export function normalizeTitle(raw: string): string {
     .replace(/^(the|a|an) /, '');
 }
 
-/** Every title the Suggestions offer, one per normalized spelling. */
+/** Every Book title the Suggestions offer, one per normalized spelling. */
 export const TITLES: Title[] = dedupe(titlesData as string[]);
+
+/** Every Movie title the Suggestions offer: each Movie Puzzle plus decoys. */
+export const MOVIE_TITLES: Title[] = dedupe(movieTitlesData as string[]);
 
 function dedupe(titles: string[]): Title[] {
   const seen = new Set<string>();
