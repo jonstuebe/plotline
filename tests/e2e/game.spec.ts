@@ -164,3 +164,18 @@ test('the Movie tab is its own game, with its own Suggestions, share and stats @
   await page.getByRole('button', { name: 'Play Today’s Book' }).click();
   await expect(current(page)).toContainText('Book · Clue 1 of 6');
 });
+
+test('typing keeps the Clue in view and the field focused between guesses @mobile', async ({ page }) => {
+  await openGame(page);
+  await skip(page);
+  await skip(page);
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await input(page).click();
+  const nav = page.getByRole('navigation', { name: 'Today’s puzzles' });
+  await expect(nav).toBeHidden();
+  await expect(current(page)).toBeInViewport();
+  await guess(page, 'Dune');
+  await expect(current(page)).toContainText('Clue 4 of 6');
+  await expect(input(page)).toBeFocused();
+  await expect(current(page)).toBeInViewport();
+});

@@ -49,8 +49,9 @@ function useDaily(date: string, mode: Mode, attempt: number): Daily {
 }
 
 /**
- * Keeps the floating controls above the on-screen keyboard. iOS Safari doesn't resize the page for it,
- * so the gap between the layout and visual viewports becomes `--kb`, and the tab bar steps aside while typing.
+ * Keeps the floating controls above the on-screen keyboard. Where Safari doesn't shrink the page for the keyboard,
+ * the gap between the layout and visual viewports becomes `--kb` (0 where it does). Typing mode itself comes from
+ * the guess field's focus, which is reliable everywhere; see GuessField.
  */
 function useKeyboardInset() {
   useEffect(() => {
@@ -60,7 +61,6 @@ function useKeyboardInset() {
     const update = () => {
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
       root.style.setProperty('--kb', `${Math.round(kb)}px`);
-      root.toggleAttribute('data-keyboard', kb > 80);
     };
     update();
     vv.addEventListener('resize', update);

@@ -18,6 +18,43 @@ interface GuessFieldProps {
   onEdit: () => void;
 }
 
+/**
+ * While the field has focus the on-screen keyboard is up: mark the page as typing (the tab bar steps aside and the
+ * field sits on the keyboard), and bring the Clue in play to the top, since iOS scrolls the page when the keyboard opens.
+ */
+function useTypingMode(input: React.RefObject<HTMLInputElement | null>) {
+  useEffect(() => {
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+    let timer = 0;
+    const showClue = () => {
+      if (document.activeElement !== input.current) return;
+      document.querySelector('.current')?.scrollIntoView?.({ block: 'start' });
+    };
+    // Once the keyboard has finished opening (or resizing), put the Clue back in view.
+    const settle = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(showClue, 120);
+    };
+    const onFocus = () => {
+      root.setAttribute('data-typing', '');
+      settle();
+    };
+    const onBlur = () => root.removeAttribute('data-typing');
+    const el = input.current;
+    el?.addEventListener('focus', onFocus);
+    el?.addEventListener('blur', onBlur);
+    vv?.addEventListener('resize', settle);
+    return () => {
+      window.clearTimeout(timer);
+      el?.removeEventListener('focus', onFocus);
+      el?.removeEventListener('blur', onBlur);
+      vv?.removeEventListener('resize', settle);
+      root.removeAttribute('data-typing');
+    };
+  }, [input]);
+}
+
 /** The floating guess field: the title being typed, its Suggestions above it, and the Guess button inside it. */
 export function GuessField({ mode, record, problem, shake, onGuess, onEdit }: GuessFieldProps) {
   const [value, setValue] = useState('');
@@ -27,6 +64,7 @@ export function GuessField({ mode, record, problem, shake, onGuess, onEdit }: Gu
   const formRef = useRef<HTMLFormElement>(null);
   const listId = useId();
   const optionId = (i: number) => `${listId}-${i}`;
+  useTypingMode(inputRef);
 
   const items: Title[] = open ? suggest(value, guessedTitles(record), MODE_INFO[mode].titles) : [];
   const expanded = items.length > 0;
@@ -145,7 +183,14 @@ export function GuessField({ mode, record, problem, shake, onGuess, onEdit }: Gu
             </li>
           ))}
         </ul>
-        <button className="send" type="submit" aria-label="Guess">
+        <button
+          className="send"
+          type="submit"
+          aria-label="Guess"
+          // Keep focus (and the keyboard) in the field: a blur would end typing mode and move the button mid-press.
+          onPointerDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
+        >
           <ArrowUpIcon />
         </button>
       </form>
