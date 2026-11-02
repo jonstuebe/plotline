@@ -147,6 +147,7 @@ textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid va
   <h1>Plotline <span>Review desk</span></h1>
   <div class="tally" id="tally"></div>
   <div class="controls">
+    <div class="tabs" role="group" aria-label="Puzzle list" id="modes"></div>
     <div class="tabs" role="group" aria-label="Show">
       <button data-filter="upcoming">Upcoming</button>
       <button data-filter="needs">Needs review</button>
@@ -165,6 +166,7 @@ const STATUS_LABEL = { pending: 'Not reviewed', approved: 'Approved', changes: '
 
 const state = {
   data: null,
+  mode: load('mode', 'book'),
   filter: load('filter', 'upcoming'),
   hideTitles: load('hideTitles', false),
   revealed: new Set(),
@@ -238,6 +240,9 @@ function render() {
     last ? `<span>runs out after <b>${fmtDate(last.date)}</b></span>` : '',
   ].join('');
 
+  document.getElementById('modes').innerHTML = Object.entries(state.data.modes)
+    .map(([key, label]) => `<button data-mode="${key}" aria-pressed="${key === state.mode}">${esc(label)}</button>`)
+    .join('');
   document.querySelectorAll('[data-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === state.filter)));
   document.getElementById('hide').setAttribute('aria-pressed', String(state.hideTitles));
 
@@ -269,7 +274,7 @@ function deskHtml(row, list) {
     <article class="card">
       ${stampText ? `<div class="stamp ${row.status}">${stampText}</div>` : ''}
       <h2 class="${hidden ? 'hidden' : ''}" ${hidden ? 'id="reveal" title="Click to reveal"' : ''}><span>${esc(row.title)}</span></h2>
-      <p class="byline">${hidden ? 'Title hidden. Click it to reveal.' : `${esc(row.author)} · ${esc(row.published)}`}</p>
+      <p class="byline">${hidden ? 'Title hidden. Click it to reveal.' : `${state.data.creator === 'director' ? 'Directed by ' : ''}${esc(row.author)} · ${esc(row.published)}`}</p>
       ${!hidden && row.aliases.length ? `<p class="aliases">Also accepts: ${row.aliases.map(esc).join(', ')}</p>` : ''}
       ${row.problems.length ? `<div class="problems"><b>Fails the Clue checks</b><ul>${row.problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
       <ol class="clues">
@@ -302,7 +307,8 @@ function deskHtml(row, list) {
 }
 
 async function fetchData() {
-  const res = await fetch('/api/puzzles');
+  const res = await fetch(`/api/puzzles?mode=${state.mode}`);
+  if (!res.ok && state.mode !== 'book') { state.mode = 'book'; return fetchData(); }
   state.data = await res.json();
 }
 
@@ -313,7 +319,7 @@ async function verdict(status) {
   const draft = draftFor(row);
   const body = status === 'changes' ? { status, note: draft.note, flagged: [...draft.flagged] } : { status };
   if (status === 'changes' && !draft.note.trim() && !draft.flagged.size) return;
-  const res = await fetch(`/api/reviews/${row.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const res = await fetch(`/api/reviews/${row.id}?mode=${state.mode}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!res.ok) { state.saved = `Couldn't save: ${(await res.json()).error}`; return render(); }
   state.data = await res.json();
   state.draft.delete(row.id);
@@ -348,7 +354,14 @@ function toggleClue(i) {
 document.addEventListener('click', (e) => {
   const t = e.target.closest('button, #reveal');
   if (!t) return;
-  if (t.dataset.filter) { state.filter = t.dataset.filter; store('filter', state.filter); render(); }
+  if (t.dataset.mode) {
+    if (t.dataset.mode === state.mode) return;
+    state.mode = t.dataset.mode; store('mode', state.mode);
+    // Ids restart in each list, so drafts and picks don't carry across.
+    state.selected = null; state.draft.clear(); state.revealed.clear(); state.saved = '';
+    fetchData().then(render);
+  }
+  else if (t.dataset.filter) { state.filter = t.dataset.filter; store('filter', state.filter); render(); }
   else if (t.id === 'hide') { state.hideTitles = !state.hideTitles; state.revealed.clear(); store('hideTitles', state.hideTitles); render(); }
   else if (t.dataset.id) { state.selected = Number(t.dataset.id); state.saved = ''; render(); }
   else if (t.dataset.clue) toggleClue(Number(t.dataset.clue));
@@ -387,7 +400,7 @@ document.addEventListener('keydown', (e) => {
   else if (/^[1-6]$/.test(k)) toggleClue(Number(k) - 1);
 });
 
-// Pick up edits to puzzles.json when you come back to the tab.
+// Pick up edits to the Puzzle files when you come back to the tab.
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible') { await fetchData(); render(); }
 });

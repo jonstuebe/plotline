@@ -13,8 +13,8 @@ export const normalize = (raw) =>
     .trim()
     .replace(/^(the|a|an) /, '');
 
-/** What's wrong with a Book's six Clues, one line per problem. */
-export function clueProblems({ title, author, clues }) {
+/** What's wrong with a Puzzle's six Clues, one line per problem. `creator` names who the last Clue must credit. */
+export function clueProblems({ title, author, clues }, creator = 'author') {
   const problems = [];
   clues.forEach((clue, i) => {
     const count = String(clue).trim().split(/\s+/).length;
@@ -22,6 +22,6 @@ export function clueProblems({ title, author, clues }) {
     if (i < 4 && normalize(clue).includes(normalize(title))) problems.push(`Clue ${i + 1} gives the title away: ${clue}`);
   });
   const surname = normalize(author.split(' ').at(-1));
-  if (!normalize(clues.at(-1)).includes(surname)) problems.push(`The last Clue should name the author (${author}).`);
+  if (!normalize(clues.at(-1)).includes(surname)) problems.push(`The last Clue should name the ${creator} (${author}).`);
   return problems;
 }
