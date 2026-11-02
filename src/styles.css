@@ -148,6 +148,16 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  /* An app, not a document: no text selection or long-press callouts, except where you type. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 button,
@@ -500,7 +510,7 @@ h3 {
   min-height: 110px;
   margin-top: 10px;
   padding: 12px;
-  font: 0.765rem/1.385 var(--sf);
+  font: 1rem/1.294 var(--sf); /* Body: 16px or more, or iOS zooms in on focus */
   background: var(--group);
   border: 0.5px solid var(--sep);
   border-radius: 14px;
@@ -1064,8 +1074,14 @@ h3 {
     .suggestions li,
     .row-text,
     .lead,
-    .rules li {
+    .rules li,
+    .manual {
       font: -apple-system-body;
+    }
+    /* iOS zooms into any focused field under 16px, which a smaller Dynamic Type size would cause. */
+    .field input,
+    .manual {
+      font-size: max(16px, 1rem);
     }
   }
 }
