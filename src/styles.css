@@ -572,7 +572,7 @@ h3 {
 .bottom {
   position: fixed;
   left: 50%;
-  bottom: calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--kb, 0px));
+  bottom: max(8px, env(safe-area-inset-bottom, 0px));
   z-index: 30;
   display: grid;
   gap: 10px;
@@ -581,9 +581,11 @@ h3 {
   transform: translateX(-50%);
 }
 /* While typing the keyboard takes the bottom of the screen (home indicator included): the field rides
-   on it and the tab bar steps aside, as on iOS. */
+   on it and the tab bar steps aside, as on iOS. It hangs from the top edge of the keyboard (see useKeyboardInset). */
 :root[data-typing] .bottom {
-  bottom: calc(var(--kb, 0px) + 8px);
+  top: calc(var(--vv-bottom, 100%) - 8px);
+  bottom: auto;
+  transform: translate(-50%, -100%);
 }
 :root[data-typing] .tabbar {
   display: none;

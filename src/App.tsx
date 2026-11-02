@@ -49,25 +49,30 @@ function useDaily(date: string, mode: Mode, attempt: number): Daily {
 }
 
 /**
- * Keeps the floating controls above the on-screen keyboard. Where Safari doesn't shrink the page for the keyboard,
- * the gap between the layout and visual viewports becomes `--kb` (0 where it does). Typing mode itself comes from
- * the guess field's focus, which is reliable everywhere; see GuessField.
+ * Keeps the guess field on top of the on-screen keyboard. iOS doesn't shrink the page for the keyboard, and on
+ * iOS 26 a `bottom`-anchored fixed element can be measured from the wrong viewport, so the field hangs from the
+ * top instead: `--vv-bottom` is the visible area's bottom edge (where the keyboard starts) in the fixed layer's
+ * coordinates. Typing mode itself comes from the guess field's focus; see GuessField.
  */
 function useKeyboardInset() {
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     const root = document.documentElement;
+    let frame = 0;
     const update = () => {
-      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      root.style.setProperty('--kb', `${Math.round(kb)}px`);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => root.style.setProperty('--vv-bottom', `${Math.round(vv.offsetTop + vv.height)}px`));
     };
     update();
     vv.addEventListener('resize', update);
     vv.addEventListener('scroll', update);
+    window.addEventListener('scroll', update, { passive: true });
     return () => {
+      cancelAnimationFrame(frame);
       vv.removeEventListener('resize', update);
       vv.removeEventListener('scroll', update);
+      window.removeEventListener('scroll', update);
     };
   }, []);
 }
