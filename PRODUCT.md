@@ -14,21 +14,21 @@ Plotline is a daily guessing game: one famous book and one famous movie each day
 
 ## Brand Personality
 
-Its own thing, not a costume. Plotline should feel like a brand, not a themed room (library, video store, newspaper, transit map are all off the table as literal metaphors). Clever, quick, and confident, with a little wit in the copy; strong enough in colour and type that a screenshot is recognisable. (Inferred; the user confirmed "not a costume, not plain" and hasn't picked further words yet.)
+A native iOS 26 app, not a costume. Plotline looks and behaves like something Apple could have shipped: SF Pro with iOS text styles and Dynamic Type, UIKit system colours with systemBlue as the only accent, content on grouped cards, and Liquid Glass reserved for the control layer (toolbar buttons, guess field, tab bar). Its personality lives in the Clues and the copy (clever, quick, a little witty), not in custom chrome. The app icon's three clue lines are the one brand mark, and they're reused wherever the app needs a symbol of its own (the icon, the favicon and the loading animation).
 
 ## Anti-references
 
 - Literal themed metaphors that dress the game up as a place or object (the earlier bookshelf, rental-store, newspaper and transit-map variants).
-- Plain, generic word-game UI that could be any daily puzzle.
+- Custom colour palettes, decorative fonts or bespoke controls where a stock iOS one exists.
 - (Inferred, unconfirmed) Wordle-clone grey grids; streaming-app dark poster carousels; cream/parchment "bookish" surfaces.
 
 ## Design Principles
 
 1. **The clue is the hero.** Every screen leads with the five words the player is thinking about right now; everything else steps back.
-2. **One identity, two modes.** Books and movies share one brand. Mode is carried by a single, consistent signal (colour), never by a change of world.
+2. **One app, two modes.** Books and Movies share one look. The mode is switched and shown by the tab bar (a label and an icon), never by a change of colour or world.
 3. **Spoiler-safe by design.** Nothing on screen, in the share text, or in the page source gives away a future clue or the answer.
 4. **Daily-ritual speed.** Open, read, guess, share in under two minutes on a phone, one-handed.
-5. **Wit in words, restraint in chrome.** Personality lives in type, colour and copy; controls stay familiar and predictable.
+5. **Wit in words, restraint in chrome.** Personality lives in the copy; type, colour and controls are stock iOS, so they stay familiar and predictable.
 
 ## Accessibility & Inclusion
 
