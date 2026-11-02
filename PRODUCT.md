@@ -14,7 +14,7 @@ Plotline is a daily guessing game: one famous book and one famous movie each day
 
 ## Brand Personality
 
-A native iOS 26 app, not a costume. Plotline looks and behaves like something Apple could have shipped: SF Pro with iOS text styles and Dynamic Type, UIKit system colours with systemBlue as the only accent, content on grouped cards, and Liquid Glass reserved for the control layer (toolbar buttons, guess field, tab bar). Its personality lives in the Clues and the copy (clever, quick, a little witty), not in custom chrome. The app icon's three clue lines are the one brand mark, and they're reused wherever the app needs a symbol of its own (the icon, the favicon and the loading animation).
+A native iOS 26 app, not a costume. Plotline looks and behaves like something Apple could have shipped: SF Pro with iOS text styles and Dynamic Type, UIKit system colours with systemBlue as the only accent, content on grouped cards, and Liquid Glass reserved for the control layer (toolbar buttons, guess field, tab bar). Its personality lives in the Clues and the copy (clever, quick, a little witty), not in custom chrome. The app icon's three clue lines are the one brand mark, and they're reused wherever the app needs a symbol of its own (the icon and the favicon). The loading animation is a systemBlue book turning its pages.
 
 ## Anti-references
 
